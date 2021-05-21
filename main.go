@@ -133,13 +133,16 @@ func insertNewBusiness(w http.ResponseWriter, r *http.Request) {
 
 func deleteBusiness(w http.ResponseWriter, r *http.Request) {
 
+	vars := mux.Vars(r)
+    
+    delval := vars["ins_id"]
 	ctx := context.Background()
 	esclient, err := GetESClient()
 	if err != nil {
 		fmt.Println("Error initializing : ", err)
 		panic("Client fail ")
 	}
-    boolQuery := elastic.NewBoolQuery().Must(elastic.NewTermQuery("inspection_id", "502"))
+    boolQuery := elastic.NewBoolQuery().Must(elastic.NewTermQuery("inspection_id", delval))
 
     result2, err2 := elastic.NewDeleteByQueryService(esclient).
         Index("poc_two").
@@ -154,7 +157,7 @@ func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/paginate/{from}/{size}", paginateData)
 	myRouter.HandleFunc("/insert", insertNewBusiness).Methods("POST")
-	myRouter.HandleFunc("/delete", deleteBusiness).Methods("DELETE")
+	myRouter.HandleFunc("/delete/{ins_id}", deleteBusiness).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8090", myRouter))
 }
 

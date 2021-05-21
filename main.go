@@ -131,10 +131,30 @@ func insertNewBusiness(w http.ResponseWriter, r *http.Request) {
     
 }
 
+func deleteBusiness(w http.ResponseWriter, r *http.Request) {
+
+	ctx := context.Background()
+	esclient, err := GetESClient()
+	if err != nil {
+		fmt.Println("Error initializing : ", err)
+		panic("Client fail ")
+	}
+    boolQuery := elastic.NewBoolQuery().Must(elastic.NewTermQuery("inspection_id", "502"))
+
+    result2, err2 := elastic.NewDeleteByQueryService(esclient).
+        Index("poc_two").
+        Query(boolQuery).
+        Do(ctx)
+    fmt.Println("DELETE RESPONSE 2: \n", result2, err2)
+	json.NewEncoder(w).Encode("Deletion Successful!!")
+
+}
+
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/paginate/{from}/{size}", paginateData)
 	myRouter.HandleFunc("/insert", insertNewBusiness).Methods("POST")
+	myRouter.HandleFunc("/delete", deleteBusiness).Methods("DELETE")
 	log.Fatal(http.ListenAndServe(":8090", myRouter))
 }
 

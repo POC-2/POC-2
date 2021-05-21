@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"strconv"
 	"log"
+	"io/ioutil"
 )
 
 type Business struct {
@@ -50,7 +51,7 @@ func paginateData(w http.ResponseWriter, r *http.Request) {
 	if err1 != nil || err2 != nil{
 		fmt.Println("Error initializing : ", err1)
 		fmt.Println("Error initializing : ", err2)
-		panic("String to Int conversion fail ")
+		panic("Doesn't look like a number")
 	}
 	ctx := context.Background()
 	esclient, err := GetESClient()
@@ -102,14 +103,42 @@ func paginateData(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func insertNewBusiness(w http.ResponseWriter, r *http.Request) {
+
+	ctx := context.Background()
+	esclient, err := GetESClient()
+	if err != nil {
+		fmt.Println("Error initializing : ", err)
+		panic("Client fail ")
+	}
+    reqBody, _ := ioutil.ReadAll(r.Body)
+	fmt.Print("Reqbody: "+string(reqBody))
+    var business Business 
+    json.Unmarshal(reqBody, &business)
+
+	dataJSON, err := json.Marshal(business)
+	js := string(dataJSON)
+	_, err = esclient.Index().
+		Index("poc_two").
+		BodyJson(js).
+		Do(ctx)
+	if err != nil {
+		panic(err)
+	}
+	json.NewEncoder(w).Encode("Insertion Succesful!!")
+	fmt.Println("[Elastic][InsertProduct]Insertion Successful")
+
+    
+}
+
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/paginate/{from}/{size}", paginateData)
+	myRouter.HandleFunc("/insert", insertNewBusiness).Methods("POST")
 	log.Fatal(http.ListenAndServe(":8090", myRouter))
 }
 
 func main() {
-
 	handleRequests()
 }
 

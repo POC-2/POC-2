@@ -1,3 +1,4 @@
+
 { "index": { "_id": 1 }}
 {"business_address":"316 California St","business_city":"San Francisco","business_id":"24937","business_longitude":"-122.3","business_name":"San Francisco Soup Company1","business_postal_code":"94105","business_state":"CA","inspection_date":"2016-06-09T00:00:00+07:00","inspection_id":"1","inspection_score":78,"inspection_type":"Routine - Unscheduled","risk_category":"Low Risk","violation_description":"Improper food labeling or menu misrepresentation","violation_id":"1"}
 { "index": { "_id": 2 }}

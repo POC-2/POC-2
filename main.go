@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"log"
 	"io/ioutil"
+	"poc2.com/POC_2/util"
 )
 
 type Business struct {
@@ -31,8 +32,14 @@ type Business struct {
 }
 
 func GetESClient() (*elastic.Client, error) {
+	// Load Config variables
+    config, err := util.LoadConfig(".")
+    if err != nil {
+        // log.Fatal("Cannot load config: ", err)
+        fmt.Println("Cannot load config: ", err)
+    }
 
-	client, err := elastic.NewClient(elastic.SetURL("http://localhost:9200"),
+	client, err := elastic.NewClient(elastic.SetURL(config.ELASTICSEARCH_URL),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(false))
 
@@ -84,7 +91,7 @@ func paginateData(w http.ResponseWriter, r *http.Request) {
 	for _, hit := range searchResult.Hits.Hits {
 		var business Business
 		// fmt.Println("Hit source: ", hit.InnerHits)
-		err := json.Unmarshal(hit.Source, &business)
+		err := json.Unmarshal(*hit.Source, &business)
 		if err != nil {
 			fmt.Println("[Getting Businesses][Unmarshal] Err=", err)
 		}
@@ -153,11 +160,68 @@ func deleteBusiness(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// func sortData(w http.ResponseWriter, r *http.Request) {
+//     vars := mux.Vars(r)
+    
+//     fieldval := vars["field"]
+
+// 	ctx := context.Background()
+// 	esclient, err := GetESClient()
+// 	if err != nil {
+// 		fmt.Println("Error initializing : ", err)
+// 		panic("Client fail ")
+// 	}
+
+// 	var businesses []Business
+
+// 	searchSource := elastic.NewSearchSource()
+// 	searchSource.Query(elastic.NewMatchAllQuery())
+
+// 	queryStr, err1 := searchSource.Source()
+// 	queryJs, err2 := json.Marshal(queryStr)
+
+// 	if err1 != nil || err2 != nil {
+// 		fmt.Println("[esclient][GetResponse]err during query marshal=", err1, err2)
+// 	}
+// 	fmt.Println("[esclient]Final ESQuery=\n", string(queryJs))
+
+// 	searchService := esclient.Search().Index("poc_two").SearchSource(searchSource).Sort(fieldval, true)
+
+// 	searchResult, err := searchService.Do(ctx)
+// 	if err != nil {
+// 		fmt.Println("[ProductsES][GetPIds]Error=", err)
+// 		return
+// 	}
+// 	// fmt.Print("hits: ", searchResult.Hits.Hits)
+// 	for _, hit := range searchResult.Hits.Hits {
+// 		var business Business
+// 		// fmt.Println("Hit source: ", hit.InnerHits)
+// 		err := json.Unmarshal(hit.Source, &business)
+// 		if err != nil {
+// 			fmt.Println("[Getting Businesses][Unmarshal] Err=", err)
+// 		}
+
+// 		businesses = append(businesses, business)
+// 		json.NewEncoder(w).Encode(hit)
+// 	}
+
+// 	if err != nil {
+// 		fmt.Println("Fetching business fail: ", err)
+// 	} else {
+// 		for _, s := range businesses {
+// 			fmt.Printf("Businesses found Name: %s, Ins_id: %s, Vio_id: %s \n", s.Business_name, s.Inspection_id, s.Violation_id)
+// 		}
+// 	}
+
+// }
+
+
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/paginate/{from}/{size}", paginateData)
 	myRouter.HandleFunc("/insert", insertNewBusiness).Methods("POST")
 	myRouter.HandleFunc("/delete/{ins_id}", deleteBusiness).Methods("DELETE")
+	// myRouter.HandleFunc("/sort/{field}", sortData)
 	log.Fatal(http.ListenAndServe(":8090", myRouter))
 }
 

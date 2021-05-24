@@ -232,12 +232,61 @@ func sortData(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func getSingleData(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	idval := vars["ins_id"]
+
+	ctx := context.Background()
+	esclient, err := GetESClient()
+	if err != nil {
+		fmt.Println("Error initializing : ", err)
+		panic("Client fail ")
+	}
+
+	var businesses []Business
+
+	searchService := esclient.Search().Index("poc_two").Query(elastic.NewMatchQuery("inspection_id", idval)).RestTotalHitsAsInt(true)
+	searchResult, err := searchService.Do(ctx)
+	if err != nil {
+		fmt.Println("[ProductsES][GetPIds]Error=", err)
+		return
+	}
+	if len(searchResult.Hits.Hits) == 0{
+		json.NewEncoder(w).Encode("No data found")
+		fmt.Println("No data found!!")
+		return
+	}
+	// fmt.Print("hits: ", len(searchResult.Hits.Hits))
+	for _, hit := range searchResult.Hits.Hits {
+		var business Business
+		// fmt.Println("Hit source: ", hit.InnerHits)
+		err := json.Unmarshal(*hit.Source, &business)
+		if err != nil {
+			fmt.Println("[Getting Businesses][Unmarshal] Err=", err)
+		}
+
+		businesses = append(businesses, business)
+		json.NewEncoder(w).Encode(hit)
+	}
+
+	if err != nil {
+		fmt.Println("Fetching business fail: ", err)
+	} else {
+		for _, s := range businesses {
+			fmt.Printf("Businesses found Name: %s, Ins_id: %s, Vio_id: %s \n", s.Business_name, s.Inspection_id, s.Violation_id)
+		}
+	}
+
+}
+
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/paginate/{from}/{size}", paginateData)
 	myRouter.HandleFunc("/insert", insertNewBusiness).Methods("POST")
 	myRouter.HandleFunc("/delete/{ins_id}", deleteBusiness).Methods("DELETE")
 	myRouter.HandleFunc("/sort/{field}/{size}", sortData)
+	myRouter.HandleFunc("/{ins_id}", getSingleData)
 	log.Fatal(http.ListenAndServe(":8090", myRouter))
 }
 

@@ -129,6 +129,7 @@ func insertNewBusiness(w http.ResponseWriter, r *http.Request) {
 		Index("poc_two").
 		Type("_doc").
 		BodyJson(js).
+		Id(business.Inspection_id).
 		Do(ctx)
 	if err != nil {
 		panic(err)

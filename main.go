@@ -80,7 +80,7 @@ func paginateData(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("[esclient]Final ESQuery=\n", string(queryJs))
 
-	searchService := esclient.Search().Index("poc_two").SearchSource(searchSource).From(from).Size(size)
+	searchService := esclient.Search().Index("poc_two").SearchSource(searchSource).From(from).Size(size).RestTotalHitsAsInt(true)
 
 	searchResult, err := searchService.Do(ctx)
 	if err != nil {
@@ -122,11 +122,12 @@ func insertNewBusiness(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("Reqbody: " + string(reqBody))
 	var business Business
 	json.Unmarshal(reqBody, &business)
-
+	fmt.Println("unmarshal hua")
 	dataJSON, err := json.Marshal(business)
 	js := string(dataJSON)
 	_, err = esclient.Index().
 		Index("poc_two").
+		Type("_doc").
 		BodyJson(js).
 		Do(ctx)
 	if err != nil {

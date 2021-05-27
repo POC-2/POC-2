@@ -6,6 +6,7 @@ import (
 
 type Config struct {
 	ELASTICSEARCH_URL string `mapstructure:"ELASTICSEARCH_URL"`
+	LOCALHOST_PORT string `mapstructure:"LOCALHOST_PORT"`
 }
 
 

@@ -11,8 +11,7 @@ import (
 func Listen() {
 	config, err := util.LoadConfig(".")
 	if err != nil {
-		// log.Fatal("Cannot load config: ", err)
-		fmt.Println("Cannot load config: ", err)
+		log.Fatal("Cannot load config: ", err)
 	}
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/POC2/business/paginate", PaginateData)

@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
-
+	log "github.com/sirupsen/logrus"
 	"github.com/olivere/elastic"
 	"poc2.com/POC-2/elasticclient"
 )
@@ -29,11 +30,13 @@ type Business struct {
 }
 
 func PaginateService(from int, size int, w http.ResponseWriter){
+	file, _ := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	ctx := context.Background()
 	esclient, err := elasticclient.GetESClient()
 	if err != nil {
-		fmt.Println("Error initializing : ", err)
-		panic("Client fail ")
+		log.SetOutput(file)
+		log.Println("Error initializing : ", err)
+		log.Fatal("Client fail ")
 	}
 
 	var businesses []Business
@@ -45,15 +48,17 @@ func PaginateService(from int, size int, w http.ResponseWriter){
 	queryJs, err2 := json.Marshal(queryStr)
 
 	if err1 != nil || err2 != nil {
-		fmt.Println("[esclient][GetResponse]err during query marshal=", err1, err2)
+		log.SetOutput(file)
+		log.Println("[esclient][GetResponse]err during query marshal=", err1, err2)
 	}
-	fmt.Println("[esclient]Final ESQuery=\n", string(queryJs))
+	log.Println("[esclient]Final ESQuery=\n", string(queryJs))
 
 	searchService := esclient.Search().Index("poc_two").SearchSource(searchSource).From(from).Size(size).RestTotalHitsAsInt(true)
 
 	searchResult, err := searchService.Do(ctx)
 	if err != nil {
-		fmt.Println("[ProductsES][GetPIds]Error=", err)
+		log.SetOutput(file)
+		log.Fatal("[ProductsES][GetPIds]Error=", err)
 		return
 	}
 	// fmt.Print("hits: ", searchResult.Hits.Hits)
@@ -62,7 +67,8 @@ func PaginateService(from int, size int, w http.ResponseWriter){
 		// fmt.Println("Hit source: ", hit.InnerHits)
 		err := json.Unmarshal(*hit.Source, &business)
 		if err != nil {
-			fmt.Println("[Getting Businesses][Unmarshal] Err=", err)
+			log.SetOutput(file)
+			log.Println("[Getting Businesses][Unmarshal] Err=", err)
 		}
 
 		businesses = append(businesses, business)
@@ -70,7 +76,8 @@ func PaginateService(from int, size int, w http.ResponseWriter){
 	}
 
 	if err != nil {
-		fmt.Println("Fetching business fail: ", err)
+		log.SetOutput(file)
+		log.Error("Fetching business fail: ", err)
 	} else {
 		for _, s := range businesses {
 			fmt.Printf("Businesses found Name: %s, Ins_id: %s, Vio_id: %s \n", s.Business_name, s.Inspection_id, s.Violation_id)
@@ -79,10 +86,12 @@ func PaginateService(from int, size int, w http.ResponseWriter){
 }
 
 func InsertDataService(reqBody []byte, w http.ResponseWriter){
+	file, _ := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	ctx := context.Background()
 	esclient, err := elasticclient.GetESClient()
 	if err != nil {
-		fmt.Println("Error initializing : ", err)
+		log.SetOutput(file)
+		log.Error("Error initializing : ", err)
 		panic("Client fail ")
 	}
 	var business Business
@@ -97,45 +106,53 @@ func InsertDataService(reqBody []byte, w http.ResponseWriter){
 		Id(business.Inspection_id).
 		Do(ctx)
 	if err != nil {
-		panic(err)
+		log.SetOutput(file)
+		log.Error(err)
 	}
 	json.NewEncoder(w).Encode("Insertion Succesful!!")
-	fmt.Println("[Elastic][InsertProduct]Insertion Successful")
+	log.SetOutput(file)
+	log.Println("[Elastic][InsertProduct]Insertion Successful")
 }
 
 func DeleteDataService(delval string, w http.ResponseWriter){
+	file, _ := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	ctx := context.Background()
 	esclient, err := elasticclient.GetESClient()
 	if err != nil {
-		fmt.Println("Error initializing : ", err)
-		panic("Client fail ")
+		log.SetOutput(file)
+		log.Error("Error initializing : ", err)
+		log.Println("Client fail ")
 	}
 	boolQuery := elastic.NewBoolQuery().Must(elastic.NewTermQuery("inspection_id", delval))
 	result2, err2 := elastic.NewDeleteByQueryService(esclient).
 		Index("poc_two").
 		Query(boolQuery).
 		Do(ctx)
-	fmt.Println("DELETE RESPONSE 2: \n", result2, err2)
+	log.Println("DELETE RESPONSE 2: \n", result2, err2)
 	json.NewEncoder(w).Encode("Deletion Successful!!")
 }
 
 func GetDataService(idval string, w http.ResponseWriter){
+	file, _ := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	ctx := context.Background()
 	esclient, err := elasticclient.GetESClient()
 	if err != nil {
-		fmt.Println("Error initializing : ", err)
-		panic("Client fail ")
+		log.SetOutput(file)
+		log.Error("Error initializing : ", err)
+		log.Println("Client fail ")
 	}
 	var businesses []Business
 	searchService := esclient.Search().Index("poc_two").Query(elastic.NewMatchQuery("inspection_id", idval)).RestTotalHitsAsInt(true)
 	searchResult, err := searchService.Do(ctx)
 	if err != nil {
-		fmt.Println("[ProductsES][GetPIds]Error=", err)
+		log.SetOutput(file)
+		log.Error("[ProductsES][GetPIds]Error=", err)
 		return
 	}
 	if len(searchResult.Hits.Hits) == 0 {
 		json.NewEncoder(w).Encode("No data found")
-		fmt.Println("No data found!!")
+		log.SetOutput(file)
+		log.Error("No data found!!")
 		return
 	}
 	// fmt.Print("hits: ", len(searchResult.Hits.Hits))
@@ -144,13 +161,14 @@ func GetDataService(idval string, w http.ResponseWriter){
 		// fmt.Println("Hit source: ", hit.InnerHits)
 		err := json.Unmarshal(*hit.Source, &business)
 		if err != nil {
-			fmt.Println("[Getting Businesses][Unmarshal] Err=", err)
+			log.SetOutput(file)
+			log.Error("[Getting Businesses][Unmarshal] Err=", err)
 		}
 		businesses = append(businesses, business)
 		json.NewEncoder(w).Encode(hit)
 	}
 	if err != nil {
-		fmt.Println("Fetching business fail: ", err)
+		log.Println("Fetching business fail: ", err)
 	} else {
 		for _, s := range businesses {
 			fmt.Printf("Businesses found Name: %s, Ins_id: %s, Vio_id: %s \n", s.Business_name, s.Inspection_id, s.Violation_id)
@@ -159,11 +177,13 @@ func GetDataService(idval string, w http.ResponseWriter){
 }
 
 func SortService(fieldval []string, size int, typeval []string, w http.ResponseWriter){
+	file, _ := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	ctx := context.Background()
 	esclient, err := elasticclient.GetESClient()
 	if err != nil {
-		fmt.Println("Error initializing : ", err)
-		panic("Client fail ")
+		log.SetOutput(file)
+		log.Error("Error initializing : ", err)
+		log.Panic("Client fail ")
 	}
 	var businesses []Business
 	if fieldval[0] != "inspection_score" {
@@ -178,7 +198,8 @@ func SortService(fieldval []string, size int, typeval []string, w http.ResponseW
 	searchService := esclient.Search().Index("poc_two").Query(elastic.NewMatchAllQuery()).Size(size).Sort(fieldval[0], flag).RestTotalHitsAsInt(true)
 	searchResult, err := searchService.Do(ctx)
 	if err != nil {
-		fmt.Println("[ProductsES][GetPIds]Error=", err)
+		log.SetOutput(file)
+		log.Error("[ProductsES][GetPIds]Error=", err)
 		return
 	}
 	// fmt.Print("hits: ", searchResult.Hits.Hits)
@@ -187,7 +208,8 @@ func SortService(fieldval []string, size int, typeval []string, w http.ResponseW
 		// fmt.Println("Hit source: ", hit.InnerHits)
 		err := json.Unmarshal(*hit.Source, &business)
 		if err != nil {
-			fmt.Println("[Getting Businesses][Unmarshal] Err=", err)
+			log.SetOutput(file)
+			log.Error("[Getting Businesses][Unmarshal] Err=", err)
 		}
 
 		businesses = append(businesses, business)
@@ -195,10 +217,11 @@ func SortService(fieldval []string, size int, typeval []string, w http.ResponseW
 	}
 
 	if err != nil {
-		fmt.Println("Fetching business fail: ", err)
+		log.Println("Fetching business fail: ", err)
 	} else {
 		for _, s := range businesses {
-			fmt.Printf("Businesses found Name: %s, Ins_id: %s, Vio_id: %s \n", s.Business_name, s.Inspection_id, s.Violation_id)
+			log.SetOutput(file)
+			log.Printf("Businesses found Name: %s, Ins_id: %s, Vio_id: %s \n", s.Business_name, s.Inspection_id, s.Violation_id)
 		}
 	}
 }

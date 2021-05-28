@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"poc2.com/POC-2/service"
@@ -62,6 +61,13 @@ func OperationsOnBusiness(w http.ResponseWriter, r *http.Request) {
 
 		reqBody, _ := ioutil.ReadAll(r.Body)
 		fmt.Print("Reqbody: " + string(reqBody))
+		service.InsertDataService(reqBody, w)
+	} else if r.Method == "PUT" {
+
+		delval := vars["ins_id"]
+		reqBody, _ := ioutil.ReadAll(r.Body)
+		fmt.Print("Reqbody: " + string(reqBody))
+		service.DeleteDataService(delval, w)
 		service.InsertDataService(reqBody, w)
 	}
 }

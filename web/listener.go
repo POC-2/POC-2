@@ -15,6 +15,6 @@ func Listen() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/POC2/business/paginate", PaginateData)
 	myRouter.HandleFunc("/POC2/business/sort", SortData)
-	myRouter.HandleFunc("/POC2/business/{ins_id}", OperationsOnBusiness).Methods("GET","POST","DELETE")
+	myRouter.HandleFunc("/POC2/business/{ins_id}", OperationsOnBusiness).Methods("GET","POST","DELETE","PUT")
 	log.Fatal(http.ListenAndServe(config.LOCALHOST_PORT, myRouter))
 }

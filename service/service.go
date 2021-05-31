@@ -60,12 +60,19 @@ func PaginateService(from int, size int, w http.ResponseWriter) {
 
 	searchResult, err := searchService.Do(ctx)
 	if err != nil {
-		w.WriteHeader(404)
+		w.WriteHeader(500)
 		log.SetOutput(file)
 		log.Error("Endpoint hit: Paginate (Service),  Output: SearchResult Error=", err)
 		return
 	}
-	// fmt.Print("hits: ", searchResult.Hits.Hits)
+	if len(searchResult.Hits.Hits) == 0 {
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode("No data found")
+		log.SetOutput(file)
+		log.Error("Endpoint hit: Paginate (Service), Output: No data found!!")
+		return
+	}
+
 	for _, hit := range searchResult.Hits.Hits {
 		var business Business
 		// fmt.Println("Hit source: ", hit.InnerHits)
@@ -240,7 +247,14 @@ func SortService(fieldval []string, size int, typeval []string, w http.ResponseW
 		log.Error("Endpoint hit: Sort Data (Service), Output: SearchResult Error=", err)
 		return
 	}
-	// fmt.Print("hits: ", searchResult.Hits.Hits)
+	if len(searchResult.Hits.Hits) == 0 {
+		w.WriteHeader(404)
+		json.NewEncoder(w).Encode("No data found")
+		log.SetOutput(file)
+		log.Error("Endpoint hit: Sort Data (Service), Output: No data found!!")
+		return
+	}
+
 	for _, hit := range searchResult.Hits.Hits {
 		var business Business
 		// fmt.Println("Hit source: ", hit.InnerHits)

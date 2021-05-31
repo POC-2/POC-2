@@ -1,0 +1,112 @@
+{
+	"settings": {
+    	"number_of_shards": 1,
+    	"number_of_replicas": 1
+	},
+   "mappings": {
+       "properties": {
+         "business_address": {
+               "type": "text",
+               "fields": {
+                  "keyword": {
+                    "type":  "keyword"
+                  }
+                }
+         },
+         "business_city": {
+               "type": "text",
+               "fields": {
+                  "keyword": {
+                    "type":  "keyword"
+                  }
+                }
+         },
+         "business_id": {
+               "type": "text",
+               "fields": {
+                  "keyword": {
+                    "type":  "keyword"
+                }
+               }
+         },
+				"business_name": {
+					"type": "text",
+					"fields": {
+              "keyword": {
+                "type":  "keyword"
+              }
+					}
+				},
+				"business_longitude": {
+					"type": "text",
+					"fields": {
+              "keyword": {
+                "type":  "keyword"
+              }
+					}
+				},
+				"business_postal_code": {
+					"type": "text",
+					"fields": {
+              "keyword": {
+                "type":  "keyword"
+              }
+					}
+				},
+				"business_state": {
+					"type": "text",
+					"fields": {
+              "keyword": {
+                "type":  "keyword"
+              }
+					}
+				},
+				"inspection_date": {
+					"type": "date"
+				},
+				"inspection_id": {
+					"type": "text",
+					"fields": {
+            "keyword": {
+              "type":  "keyword"
+            }
+          }
+				},
+				"inspection_score": {
+					"type": "long"
+				},
+				"inspection_type": {
+					"type": "text",
+					"fields": {
+              "keyword": {
+                "type":  "keyword"
+              }
+					}
+				},
+				"risk_category": {
+					"type": "text",
+					"fields": {
+              "keyword": {
+                "type":  "keyword"
+              }
+					}
+				},
+				"violation_description": {
+					"type": "text",
+					"fields": {
+              "keyword": {
+                "type":  "keyword"
+              }
+					}
+				},
+				"violation_id": {
+					"type": "text",
+					"fields": {
+              "keyword": {
+                "type":  "keyword"
+              }
+					}
+				}
+     	}
+   }
+}

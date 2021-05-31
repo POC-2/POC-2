@@ -100,7 +100,7 @@ func PaginateService(from int, size int, w http.ResponseWriter) {
 	}
 }
 
-func InsertDataService(reqBody []byte, flag int, w http.ResponseWriter) {
+func InsertDataService(idval string, reqBody []byte, flag int, w http.ResponseWriter) {
 	file, _ := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	ctx := context.Background()
 	esclient, err := elasticclient.GetESClient()
@@ -115,6 +115,13 @@ func InsertDataService(reqBody []byte, flag int, w http.ResponseWriter) {
 	}
 	var business Business
 	json.Unmarshal(reqBody, &business)
+	if idval != business.Inspection_id {
+		w.WriteHeader(400)
+		log.SetOutput(file)
+		json.NewEncoder(w).Encode("Inspection Id in the Body and in the URL does not match! Kindly make sure you provide same Id in the URL as in Inspection Id of the body!")
+		log.Error("Endpoint hit: Paginate,  Output: Conflict of Id's in URL and Body!")
+		return
+	}
 	dataJSON, err := json.Marshal(business)
 	js := string(dataJSON)
 	_, err = esclient.Index().
@@ -183,7 +190,7 @@ func GetDataService(idval string, w http.ResponseWriter) {
 	searchService := esclient.Search().Index("poc_two").Query(elastic.NewMatchQuery("inspection_id", idval)).RestTotalHitsAsInt(true)
 	searchResult, err := searchService.Do(ctx)
 	if err != nil {
-		w.WriteHeader(404)
+		w.WriteHeader(500)
 		log.SetOutput(file)
 		log.Error("Endpoint hit: Get Data (Service), Output: SearchResult Error=", err)
 		return
@@ -230,7 +237,7 @@ func SortService(fieldval []string, size int, typeval []string, w http.ResponseW
 		log.Error("Endpoint hit: Sort Data (Service), Output: (Client Fail)Error initializing : ", err)
 	}
 	var businesses []Business
-	if fieldval[0] != "inspection_score" {
+	if fieldval[0] != "inspection_score" && fieldval[0] != "inspection_date" {
 		fieldval[0] = fieldval[0] + ".keyword"
 	}
 	flag := true

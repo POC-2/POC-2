@@ -67,14 +67,16 @@ func OperationsOnBusiness(w http.ResponseWriter, r *http.Request) {
 
 	} else if r.Method == "POST" {
 
+		idval := vars["ins_id"]
 		reqBody, _ := ioutil.ReadAll(r.Body)
 		fmt.Print("Reqbody: " + string(reqBody))
-		service.InsertDataService(reqBody, 0, w)
+		service.InsertDataService(idval, reqBody, 0, w)
 	} else if r.Method == "PUT" {
 
+		idval := vars["ins_id"]
 		reqBody, _ := ioutil.ReadAll(r.Body)
 		fmt.Print("Reqbody: " + string(reqBody))
-		service.InsertDataService(reqBody, 1, w)
+		service.InsertDataService(idval, reqBody, 1, w)
 	}
 }
 

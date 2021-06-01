@@ -20,11 +20,11 @@ func Listen() {
 	// Used mux Router to define the endpoints.
 	myRouter := mux.NewRouter().StrictSlash(true)
 
-	// Paginate endpoint accepts 2 query params "from" and "size".
-	myRouter.HandleFunc("/POC2/business/paginate", PaginateData) //from: Number of records to be skipped, size: Number of records to be printed.
-
 	// Sort endpoint accpets 3 query params "field", "size" and "type".
 	myRouter.HandleFunc("/POC2/business/sort", SortData) // field: Field on basis of which sorting should be done, size: Number of records to be printed, type: Order of sorting
+
+	// Paginate endpoint accepts 2 query params "from" and "size".
+	myRouter.HandleFunc("/POC2/business/paginate", PaginateData) //from: Number of records to be skipped, size: Number of records to be printed.
 
 	// 4 Operations can be performed on this endpoint.
 	myRouter.HandleFunc("/POC2/business/{ins_id}", OperationsOnBusiness).Methods("GET", "POST", "DELETE", "PUT")

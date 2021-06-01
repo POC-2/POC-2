@@ -54,7 +54,6 @@ func PaginateData(w http.ResponseWriter, r *http.Request) {
 }
 
 func OperationsOnBusiness(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Galat Yaha aaya")
 	vars := mux.Vars(r)
 	if r.Method == "GET" {
 		idval := vars["ins_id"]
